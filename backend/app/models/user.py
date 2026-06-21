@@ -1,14 +1,43 @@
+import re
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+class SendOTP(BaseModel):
+    """Schema for requesting an OTP to be sent."""
+    email: str
+
+    @field_validator('email')
+    @classmethod
+    def validate_gmail(cls, v: str) -> str:
+        v = v.strip().lower()
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@gmail\.com$', v):
+            raise ValueError('Only @gmail.com email addresses are allowed')
+        return v
+
+
+class VerifyOTP(BaseModel):
+    """Schema for verifying the OTP."""
+    email: str
+    otp: str
 
 
 class UserCreate(BaseModel):
-    """Schema for user registration."""
+    """Schema for user registration (after OTP verification)."""
     name: str
     email: str
     password: str = Field(..., min_length=6)
+    otp: str
+
+    @field_validator('email')
+    @classmethod
+    def validate_gmail(cls, v: str) -> str:
+        v = v.strip().lower()
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@gmail\.com$', v):
+            raise ValueError('Only @gmail.com email addresses are allowed')
+        return v
 
 
 class UserLogin(BaseModel):

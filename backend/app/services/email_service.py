@@ -6,6 +6,77 @@ import aiosmtplib
 from app.config import settings
 
 
+def _build_otp_email_html(otp_code: str) -> str:
+    """Build HTML email template for OTP verification."""
+    return f'''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 20px 10px;">
+        <tr>
+            <td align="center">
+                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.07);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #6366f1, #818cf8); padding: 32px 40px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Pratham Dashboard</h1>
+                            <p style="color: #e0e7ff; margin: 8px 0 0; font-size: 14px;">Email Verification</p>
+                        </td>
+                    </tr>
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 24px; text-align: center;">
+                            <h2 style="color: #1f2937; margin: 0 0 8px; font-size: 20px;">🔐 Verify Your Email</h2>
+                            <p style="color: #6b7280; margin: 0 0 32px; font-size: 14px;">Use the code below to complete your registration. This code expires in 10 minutes.</p>
+                            <div style="background: linear-gradient(135deg, #f0f0ff, #e8e8ff); border: 2px dashed #6366f1; border-radius: 12px; padding: 24px; margin: 0 auto; max-width: 300px;">
+                                <span style="font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #6366f1;">{otp_code}</span>
+                            </div>
+                            <p style="color: #9ca3af; margin: 24px 0 0; font-size: 12px;">If you didn't request this code, you can safely ignore this email.</p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 24px 40px; background-color: #f9fafb; text-align: center;">
+                            <p style="color: #9ca3af; margin: 0; font-size: 12px;">This is an automated email from Pratham Dashboard.</p>
+                            <p style="color: #9ca3af; margin: 4px 0 0; font-size: 12px;">Do not share this code with anyone.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>'''
+
+
+async def send_otp_email(to_email: str, otp_code: str):
+    """Send an OTP verification email via SMTP."""
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f'🔐 Your Verification Code: {otp_code}'
+        msg['From'] = settings.FROM_EMAIL
+        msg['To'] = to_email
+
+        html_content = _build_otp_email_html(otp_code)
+        msg.attach(MIMEText(html_content, 'html'))
+
+        await aiosmtplib.send(
+            msg,
+            hostname=settings.SMTP_HOST,
+            port=settings.SMTP_PORT,
+            username=settings.SMTP_USER,
+            password=settings.SMTP_PASS,
+            start_tls=True,
+        )
+        print(f'OTP email sent to {to_email}')
+    except Exception as e:
+        print(f'Failed to send OTP email to {to_email}: {e}')
+        raise
+
+
 def _build_task_reminder_html(task_title: str, task_description: str, due_date: str, due_time: str) -> str:
     """Build HTML email template for task reminders."""
     description_section = ''

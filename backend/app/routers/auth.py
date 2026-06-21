@@ -1,4 +1,5 @@
-from datetime import datetime
+import random
+from datetime import datetime, timedelta
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
@@ -6,10 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.database import db
 from app.models.user import (
     PasswordChange,
+    SendOTP,
     UserCreate,
     UserLogin,
     UserResponse,
     UserUpdate,
+    VerifyOTP,
 )
 from app.services.auth_service import (
     create_access_token,
@@ -17,34 +20,117 @@ from app.services.auth_service import (
     hash_password,
     verify_password,
 )
+from app.services.email_service import send_otp_email
 
 router = APIRouter(prefix='/api/auth', tags=['auth'])
 
 
-@router.post('/signup')
-async def signup(user_data: UserCreate):
-    """Register a new user account."""
-    # Check if email already exists
-    existing = await db.users.find_one({'email': user_data.email})
+@router.post('/send-otp')
+async def send_otp(data: SendOTP):
+    """Generate a 6-digit OTP, store it, and email it to the user."""
+    email = data.email.strip().lower()
+
+    # Check if email already registered
+    existing = await db.users.find_one({'email': email})
     if existing:
         raise HTTPException(status_code=400, detail='Email already registered')
+
+    # Generate 6-digit OTP
+    otp_code = str(random.randint(100000, 999999))
+
+    # Upsert OTP document (replace any existing OTP for this email)
+    await db.otp_codes.update_one(
+        {'email': email},
+        {
+            '$set': {
+                'email': email,
+                'otp': otp_code,
+                'created_at': datetime.utcnow(),
+                'expires_at': datetime.utcnow() + timedelta(minutes=10),
+                'verified': False,
+            }
+        },
+        upsert=True,
+    )
+
+    # Send OTP via email
+    await send_otp_email(to_email=email, otp_code=otp_code)
+
+    return {'message': 'OTP sent successfully', 'email': email}
+
+
+@router.post('/verify-otp')
+async def verify_otp(data: VerifyOTP):
+    """Verify the OTP entered by the user."""
+    email = data.email.strip().lower()
+
+    otp_doc = await db.otp_codes.find_one({'email': email})
+    if not otp_doc:
+        raise HTTPException(status_code=400, detail='No OTP found. Please request a new one.')
+
+    # Check expiry
+    if datetime.utcnow() > otp_doc['expires_at']:
+        await db.otp_codes.delete_one({'email': email})
+        raise HTTPException(status_code=400, detail='OTP has expired. Please request a new one.')
+
+    # Check OTP match
+    if otp_doc['otp'] != data.otp.strip():
+        raise HTTPException(status_code=400, detail='Invalid OTP. Please try again.')
+
+    # Mark as verified
+    await db.otp_codes.update_one(
+        {'email': email},
+        {'$set': {'verified': True}},
+    )
+
+    return {'message': 'OTP verified successfully', 'verified': True}
+
+
+@router.post('/signup')
+async def signup(user_data: UserCreate):
+    """Register a new user account after OTP verification."""
+    email = user_data.email.strip().lower()
+
+    # Check if email already exists
+    existing = await db.users.find_one({'email': email})
+    if existing:
+        raise HTTPException(status_code=400, detail='Email already registered')
+
+    # Verify OTP
+    otp_doc = await db.otp_codes.find_one({'email': email})
+    if not otp_doc:
+        raise HTTPException(status_code=400, detail='No OTP found. Please verify your email first.')
+
+    if datetime.utcnow() > otp_doc['expires_at']:
+        await db.otp_codes.delete_one({'email': email})
+        raise HTTPException(status_code=400, detail='OTP has expired. Please verify your email again.')
+
+    if otp_doc['otp'] != user_data.otp.strip():
+        raise HTTPException(status_code=400, detail='Invalid OTP.')
+
+    if not otp_doc.get('verified'):
+        raise HTTPException(status_code=400, detail='Please verify your OTP first.')
 
     # Hash password and create user document
     hashed_pw = hash_password(user_data.password)
     user_doc = {
         'name': user_data.name,
-        'email': user_data.email,
+        'email': email,
         'password': hashed_pw,
-        'notification_email': user_data.email,
+        'notification_email': email,
         'default_reminder_offset': 60,
+        'email_verified': True,
         'created_at': datetime.utcnow(),
     }
 
     result = await db.users.insert_one(user_doc)
     user_id = str(result.inserted_id)
 
+    # Clean up OTP
+    await db.otp_codes.delete_one({'email': email})
+
     # Create access token
-    token = create_access_token(user_id, user_data.email)
+    token = create_access_token(user_id, email)
 
     return {
         'access_token': token,
@@ -52,7 +138,7 @@ async def signup(user_data: UserCreate):
         'user': {
             'id': user_id,
             'name': user_data.name,
-            'email': user_data.email,
+            'email': email,
         }
     }
 

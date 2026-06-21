@@ -13,4 +13,7 @@ async def create_indexes():
     await db.tasks.create_index('user_id')
     # Index on job_applications by user_id for fast job lookups
     await db.job_applications.create_index('user_id')
+    # OTP indexes: unique email + TTL auto-expiry after 10 minutes
+    await db.otp_codes.create_index('email', unique=True)
+    await db.otp_codes.create_index('expires_at', expireAfterSeconds=0)
     print('Database indexes created successfully')
