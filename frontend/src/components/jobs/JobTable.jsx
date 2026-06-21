@@ -23,10 +23,10 @@ const JobTable = ({ jobs, onJobClick, onDelete }) => {
   };
 
   return (
-    <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden' }}>
-      <div style={{ overflowX: 'auto' }}>
+    <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ overflow: 'auto', flex: 1 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
+          <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
             <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border)' }}>
               <th style={{ padding: '16px', fontWeight: 600, fontSize: '13px', color: 'var(--text-secondary)' }}>Company</th>
               <th style={{ padding: '16px', fontWeight: 600, fontSize: '13px', color: 'var(--text-secondary)' }}>Role</th>

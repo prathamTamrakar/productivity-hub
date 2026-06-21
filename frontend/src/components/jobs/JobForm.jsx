@@ -13,7 +13,7 @@ const JobForm = ({ isOpen, onClose, onSubmit, job }) => {
     application_date: defaultDate,
     job_type: 'off-campus',
     job_url: '',
-    location: 'remote',
+    location: '',
     salary_range: '',
     status: 'applied',
     notes: '',
@@ -28,7 +28,7 @@ const JobForm = ({ isOpen, onClose, onSubmit, job }) => {
         application_date: job.application_date || defaultDate,
         job_type: job.job_type || 'off-campus',
         job_url: job.job_url || '',
-        location: job.location || 'remote',
+        location: job.location || '',
         salary_range: job.salary_range || '',
         status: job.status || 'applied',
         notes: job.notes || '',
@@ -41,7 +41,7 @@ const JobForm = ({ isOpen, onClose, onSubmit, job }) => {
         application_date: defaultDate,
         job_type: 'off-campus',
         job_url: '',
-        location: 'remote',
+        location: '',
         salary_range: '',
         status: 'applied',
         notes: '',
@@ -122,13 +122,14 @@ const JobForm = ({ isOpen, onClose, onSubmit, job }) => {
               <option value="on-campus">On-campus</option>
             </select>
           </div>
-          <div className="input-group" style={{ flex: 1 }}>
-            <label>Location Model</label>
-            <select className="select" name="location" value={formData.location} onChange={handleChange}>
-              <option value="remote">Remote</option>
-              <option value="hybrid">Hybrid</option>
-              <option value="onsite">On-site</option>
-            </select>
+          <div style={{ flex: 1 }}>
+            <Input 
+              label="Location (City or Remote)" 
+              name="location" 
+              value={formData.location} 
+              onChange={handleChange} 
+              placeholder="e.g. Bangalore, Remote..."
+            />
           </div>
           <div style={{ flex: 1 }}>
             <Input 

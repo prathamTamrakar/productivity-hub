@@ -12,7 +12,7 @@ class JobCreate(BaseModel):
     application_date: str  # YYYY-MM-DD
     job_url: Optional[str] = None
     job_type: Literal['on-campus', 'off-campus'] = 'off-campus'
-    location: Literal['remote', 'onsite', 'hybrid'] = 'remote'
+    location: Optional[str] = None
     salary_range: Optional[str] = None
     notes: Optional[str] = None
     follow_up_date: Optional[str] = None  # YYYY-MM-DD
@@ -26,7 +26,7 @@ class JobUpdate(BaseModel):
     application_date: Optional[str] = None
     job_url: Optional[str] = None
     job_type: Optional[Literal['on-campus', 'off-campus']] = None
-    location: Optional[Literal['remote', 'onsite', 'hybrid']] = None
+    location: Optional[str] = None
     salary_range: Optional[str] = None
     notes: Optional[str] = None
     follow_up_date: Optional[str] = None
@@ -41,7 +41,7 @@ class JobResponse(BaseModel):
     application_date: str
     job_url: Optional[str] = None
     job_type: str = 'off-campus'
-    location: str = 'remote'
+    location: Optional[str] = None
     salary_range: Optional[str] = None
     notes: Optional[str] = None
     follow_up_date: Optional[str] = None

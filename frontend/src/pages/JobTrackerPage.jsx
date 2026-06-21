@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
-import { Briefcase, CheckSquare, FileText, XOctagon, Search, Filter } from 'lucide-react';
+import { Briefcase, CheckSquare, FileText, XOctagon, Search, Filter, Download, Upload } from 'lucide-react';
 import api from '../api/client';
 import StatCard from '../components/common/StatCard';
 import Input from '../components/common/Input';
@@ -12,11 +12,14 @@ import JobForm from '../components/jobs/JobForm';
 import JobDetail from '../components/jobs/JobDetail';
 import Skeleton from '../components/common/Skeleton';
 import './pages.css';
+import './tooltip.css';
 
 const JobTrackerPage = () => {
   const [jobs, setJobs] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = React.useRef(null);
   
   // Filters
   const [search, setSearch] = useState('');
@@ -110,6 +113,49 @@ const JobTrackerPage = () => {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await api.get('/api/jobs/export', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Pratham_Job_Tracker.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      toast.success('Excel exported successfully!');
+    } catch (error) {
+      toast.error('Failed to export jobs');
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setIsImporting(true);
+    try {
+      const res = await api.post('/api/jobs/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success(res.data.message || 'Import successful');
+      fetchJobs();
+      fetchStats();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to import Excel file');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <motion.div className="kanban-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
       <div className="kanban-stats">
@@ -173,10 +219,39 @@ const JobTrackerPage = () => {
             <option value="off-campus">Off-campus</option>
           </select>
         </div>
-        
-        <Button variant="primary" style={{ marginLeft: 'auto' }} onClick={() => { setEditingJob(null); setIsFormOpen(true); }}>
-          + New Application
-        </Button>
+        <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            accept=".xlsx" 
+            style={{ display: 'none' }} 
+          />
+          <Button variant="secondary" onClick={handleExport}>
+            <Download size={16} /> Export
+          </Button>
+          <div className="tooltip-container">
+            <Button 
+              variant="secondary" 
+              onClick={handleImportClick} 
+              disabled={isImporting}
+            >
+              <Upload size={16} /> {isImporting ? 'Importing...' : 'Import'}
+            </Button>
+            <div className="tooltip-content" style={{ maxWidth: '350px' }}>
+              <div style={{ marginBottom: '6px' }}><b>Supported Columns (any order):</b></div>
+              <ul style={{ margin: 0, paddingLeft: '20px', listStyleType: 'circle', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <li><b>Company, Role, Location, Salary, URL, Notes</b> (Text)</li>
+                <li><b>Date / Follow-up</b> (MM/DD/YYYY)</li>
+                <li><b>Status:</b> Applied, Interview, Offer, Rejected</li>
+                <li><b>Type:</b> On-campus, Off-campus</li>
+              </ul>
+            </div>
+          </div>
+          <Button variant="primary" onClick={() => { setEditingJob(null); setIsFormOpen(true); }}>
+            + New Application
+          </Button>
+        </div>
       </div>
 
       {loading ? (
