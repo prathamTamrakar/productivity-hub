@@ -7,3 +7,4 @@ apscheduler==3.11.2
 aiosmtplib==3.0.2
 pydantic-settings==2.9.1
 python-multipart==0.0.20
+openpyxl==3.1.5
