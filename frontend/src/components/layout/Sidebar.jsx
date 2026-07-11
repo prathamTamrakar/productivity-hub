@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router'
 import { motion } from 'motion/react'
-import { Home, Calendar, Briefcase, Settings, LogOut, Sun, Moon } from 'lucide-react'
+import { Home, Calendar, Briefcase, Settings, LogOut, Sun, Moon, Wallet } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/', icon: Home, label: 'Dashboard', end: true },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/jobs', icon: Briefcase, label: 'Job Tracker' },
+  { to: '/money', icon: Wallet, label: 'Money Manager' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 

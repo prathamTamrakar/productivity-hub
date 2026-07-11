@@ -10,7 +10,9 @@ async def lifespan(app: FastAPI):
     # Startup
     from app.database import create_indexes
     from app.scheduler import start_scheduler
+    from app.routers.money import seed_default_categories
     await create_indexes()
+    await seed_default_categories()
     start_scheduler()
     print('Pratham Dashboard API started')
     yield
@@ -29,11 +31,12 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-from app.routers import auth, tasks, jobs  # noqa: E402
+from app.routers import auth, tasks, jobs, money  # noqa: E402
 
 app.include_router(auth.router)
 app.include_router(tasks.router)
 app.include_router(jobs.router)
+app.include_router(money.router)
 
 
 @app.get('/')

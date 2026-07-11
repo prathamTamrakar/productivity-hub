@@ -16,4 +16,12 @@ async def create_indexes():
     # OTP indexes: unique email + TTL auto-expiry after 10 minutes
     await db.otp_codes.create_index('email', unique=True)
     await db.otp_codes.create_index('expires_at', expireAfterSeconds=0)
+    
+    # Money Manager indexes
+    await db.accounts.create_index('user_id')
+    await db.categories.create_index('user_id')
+    await db.transactions.create_index('user_id')
+    await db.transactions.create_index('date')
+    await db.budgets.create_index('user_id')
+    
     print('Database indexes created successfully')

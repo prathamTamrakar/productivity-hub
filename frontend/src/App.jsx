@@ -11,6 +11,7 @@ const DashboardLayout = React.lazy(() => import('./components/layout/DashboardLa
 const DashboardPage = React.lazy(() => import('./pages/DashboardPage'))
 const CalendarPage = React.lazy(() => import('./pages/CalendarPage'))
 const JobTrackerPage = React.lazy(() => import('./pages/JobTrackerPage'))
+const MoneyPage = React.lazy(() => import('./pages/MoneyPage'))
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'))
 
 // Loading fallback
@@ -91,6 +92,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="calendar" element={<CalendarPage />} />
             <Route path="jobs" element={<JobTrackerPage />} />
+            <Route path="money" element={<MoneyPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
