@@ -24,9 +24,18 @@ client.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
+      const url = error.config?.url || ''
+      const isAuthEndpoint = 
+        url.includes('/api/auth/login') || 
+        url.includes('/api/auth/signup') || 
+        url.includes('/api/auth/me')
+
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+
+      if (!isAuthEndpoint && window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
