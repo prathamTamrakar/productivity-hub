@@ -39,7 +39,22 @@ app.include_router(jobs.router)
 app.include_router(money.router)
 
 
+from datetime import datetime
+
 @app.get('/')
-async def root():
-    """Health check endpoint."""
-    return {'status': 'ok', 'message': 'Pratham Dashboard API'}
+@app.get('/health')
+@app.get('/api/health')
+async def health_check():
+    """Keep-alive and health check endpoint to prevent Render inactivity spindown."""
+    return {
+        'status': 'alive',
+        'message': 'Pratham Dashboard API is running and healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+    }
+
+
+@app.get('/ping')
+@app.get('/api/ping')
+async def ping():
+    """Lightweight ping endpoint for uptime monitors."""
+    return {'status': 'pong'}

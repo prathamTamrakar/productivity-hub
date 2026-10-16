@@ -91,8 +91,38 @@ async def check_reminders():
         print(f'Error in check_reminders: {e}')
 
 
+async def keep_render_alive():
+    """Self-ping Render public URL every 10 minutes to prevent spindown on inactivity."""
+    import os
+    import urllib.request
+    import asyncio
+
+    ping_url = os.environ.get('RENDER_EXTERNAL_URL') or os.environ.get('SELF_PING_URL')
+    if not ping_url:
+        return
+
+    # Normalize url to hit /health
+    url = ping_url.strip().rstrip('/')
+    if not url.endswith('/health') and not url.endswith('/ping'):
+        url = f"{url}/health"
+
+    try:
+        def _ping():
+            req = urllib.request.Request(
+                url,
+                headers={'User-Agent': 'RenderKeepAliveBot/1.0'}
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                return resp.status
+
+        status = await asyncio.to_thread(_ping)
+        print(f"Keep-alive self-ping sent to {url} (HTTP {status})")
+    except Exception as e:
+        print(f"Keep-alive self-ping failed to {url}: {e}")
+
+
 def start_scheduler():
-    """Start the APScheduler with the reminder check job."""
+    """Start the APScheduler with reminder checks and Render keep-alive jobs."""
     scheduler.add_job(
         check_reminders,
         trigger='interval',
@@ -100,8 +130,15 @@ def start_scheduler():
         id='check_reminders',
         replace_existing=True,
     )
+    scheduler.add_job(
+        keep_render_alive,
+        trigger='interval',
+        minutes=10,
+        id='keep_render_alive',
+        replace_existing=True,
+    )
     scheduler.start()
-    print('Scheduler started — checking reminders every 1 minute')
+    print('Scheduler started — checking reminders every 1 min, keep-alive every 10 min')
 
 
 def stop_scheduler():

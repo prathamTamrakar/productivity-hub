@@ -88,7 +88,7 @@ async def verify_otp(data: VerifyOTP):
 
 @router.post('/signup')
 async def signup(user_data: UserCreate):
-    """Register a new user account after OTP verification."""
+    """Register a new user account directly without email OTP validation."""
     email = user_data.email.strip().lower()
 
     # Check if email already exists
@@ -96,25 +96,10 @@ async def signup(user_data: UserCreate):
     if existing:
         raise HTTPException(status_code=400, detail='Email already registered')
 
-    # Verify OTP
-    otp_doc = await db.otp_codes.find_one({'email': email})
-    if not otp_doc:
-        raise HTTPException(status_code=400, detail='No OTP found. Please verify your email first.')
-
-    if datetime.utcnow() > otp_doc['expires_at']:
-        await db.otp_codes.delete_one({'email': email})
-        raise HTTPException(status_code=400, detail='OTP has expired. Please verify your email again.')
-
-    if otp_doc['otp'] != user_data.otp.strip():
-        raise HTTPException(status_code=400, detail='Invalid OTP.')
-
-    if not otp_doc.get('verified'):
-        raise HTTPException(status_code=400, detail='Please verify your OTP first.')
-
     # Hash password and create user document
     hashed_pw = hash_password(user_data.password)
     user_doc = {
-        'name': user_data.name,
+        'name': user_data.name.strip(),
         'email': email,
         'password': hashed_pw,
         'notification_email': email,
@@ -126,8 +111,8 @@ async def signup(user_data: UserCreate):
     result = await db.users.insert_one(user_doc)
     user_id = str(result.inserted_id)
 
-    # Clean up OTP
-    await db.otp_codes.delete_one({'email': email})
+    # Clean up OTP records if any exist
+    await db.otp_codes.delete_many({'email': email})
 
     # Create access token
     token = create_access_token(user_id, email)

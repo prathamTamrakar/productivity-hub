@@ -11,11 +11,8 @@ class SendOTP(BaseModel):
 
     @field_validator('email')
     @classmethod
-    def validate_gmail(cls, v: str) -> str:
-        v = v.strip().lower()
-        if not re.match(r'^[a-zA-Z0-9._%+-]+@gmail\.com$', v):
-            raise ValueError('Only @gmail.com email addresses are allowed')
-        return v
+    def normalize_email(cls, v: str) -> str:
+        return v.strip().lower()
 
 
 class VerifyOTP(BaseModel):
@@ -25,19 +22,16 @@ class VerifyOTP(BaseModel):
 
 
 class UserCreate(BaseModel):
-    """Schema for user registration (after OTP verification)."""
+    """Schema for user registration."""
     name: str
     email: str
     password: str = Field(..., min_length=6)
-    otp: str
+    otp: Optional[str] = None
 
     @field_validator('email')
     @classmethod
-    def validate_gmail(cls, v: str) -> str:
-        v = v.strip().lower()
-        if not re.match(r'^[a-zA-Z0-9._%+-]+@gmail\.com$', v):
-            raise ValueError('Only @gmail.com email addresses are allowed')
-        return v
+    def normalize_email(cls, v: str) -> str:
+        return v.strip().lower()
 
 
 class UserLogin(BaseModel):
