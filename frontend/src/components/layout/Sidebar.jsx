@@ -1,20 +1,19 @@
-import { NavLink } from 'react-router'
-import { motion } from 'motion/react'
-import { Home, Calendar, Briefcase, Settings, LogOut, Sun, Moon, Wallet } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
-import { useTheme } from '../../context/ThemeContext'
+import { NavLink } from 'react-router';
+import { LayoutDashboard, Calendar, Briefcase, Settings, LogOut, Sun, Moon, Wallet, Layers } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const navItems = [
-  { to: '/', icon: Home, label: 'Dashboard', end: true },
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/jobs', icon: Briefcase, label: 'Job Tracker' },
   { to: '/money', icon: Wallet, label: 'Money Manager' },
   { to: '/settings', icon: Settings, label: 'Settings' },
-]
+];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { user, logout } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <>
@@ -24,15 +23,17 @@ export default function Sidebar({ isOpen, onClose }) {
       />
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">P</div>
+          <div className="sidebar-logo-icon">
+            <Layers size={18} />
+          </div>
           <div className="sidebar-logo-text">
-            Pratham
-            <span>Dashboard</span>
+            Productivity Hub
+            <span>Personal Engine</span>
           </div>
         </div>
 
         <nav className="sidebar-nav">
-          <div className="sidebar-section-label">Menu</div>
+          <div className="sidebar-section-label">Workspace</div>
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -43,14 +44,8 @@ export default function Sidebar({ isOpen, onClose }) {
               }
               onClick={onClose}
             >
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <item.icon />
-              </motion.div>
-              {item.label}
+              <item.icon size={18} />
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
@@ -60,8 +55,8 @@ export default function Sidebar({ isOpen, onClose }) {
             className="sidebar-theme-toggle"
             onClick={toggleTheme}
           >
-            {theme === 'dark' ? <Sun /> : <Moon />}
-            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            <span>{theme === 'dark' ? 'Light Theme' : 'Dark Theme'}</span>
           </button>
 
           {user && (
@@ -74,12 +69,12 @@ export default function Sidebar({ isOpen, onClose }) {
                 <div className="sidebar-user-email">{user.email || ''}</div>
               </div>
               <button className="sidebar-logout-btn" onClick={logout} title="Logout">
-                <LogOut size={16} />
+                <LogOut size={14} />
               </button>
             </div>
           )}
         </div>
       </aside>
     </>
-  )
+  );
 }

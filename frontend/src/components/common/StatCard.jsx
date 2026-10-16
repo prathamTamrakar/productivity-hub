@@ -1,24 +1,62 @@
 import React from 'react';
-import { motion } from 'motion/react';
 
-const StatCard = ({ label, value, icon: Icon, color = 'primary' }) => {
+const StatCard = ({
+  label,
+  value,
+  icon: Icon,
+  color = 'primary',
+  subValue,
+  subLabel,
+  badge,
+  badgeVariant = 'default',
+  className = '',
+  style = {},
+}) => {
   return (
-    <motion.div 
-      whileHover={{ y: -2, boxShadow: 'var(--shadow-md)' }}
-      className="stat-card"
+    <div
+      className={`stat-card stat-card-${color} ${className}`}
+      style={{
+        ...style,
+      }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div className="stat-card-label">{label}</div>
           <div className="stat-card-value">{value}</div>
         </div>
-        {Icon && (
-          <div className="stat-card-icon" style={{ backgroundColor: `var(--${color}-light)`, color: `var(--${color})` }}>
-            <Icon size={20} />
+        {badge ? (
+          <span className={`badge badge-${badgeVariant}`} style={{ flexShrink: 0 }}>
+            {badge}
+          </span>
+        ) : Icon ? (
+          <div className={`stat-card-icon ${color}`}>
+            <Icon size={16} />
           </div>
-        )}
+        ) : null}
       </div>
-    </motion.div>
+
+      {(subValue || subLabel) && (
+        <div
+          style={{
+            fontSize: '11px',
+            color: 'var(--text-muted)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            marginTop: '2px',
+            paddingTop: '6px',
+            borderTop: '1px solid var(--border-light)',
+          }}
+        >
+          {subValue && (
+            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
+              {subValue}
+            </span>
+          )}
+          {subLabel && <span>{subLabel}</span>}
+        </div>
+      )}
+    </div>
   );
 };
 

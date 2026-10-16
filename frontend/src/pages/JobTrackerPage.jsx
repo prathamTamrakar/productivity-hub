@@ -156,22 +156,56 @@ const JobTrackerPage = () => {
     }
   };
 
+  const totalJobs = stats?.total || 0;
+  const interviewCount = stats?.interview || 0;
+  const offerCount = stats?.offer || 0;
+  const rejectedCount = stats?.rejected || 0;
+  const interviewRate = totalJobs > 0 ? ((interviewCount / totalJobs) * 100).toFixed(0) : 0;
+  const offerRate = totalJobs > 0 ? ((offerCount / totalJobs) * 100).toFixed(1) : 0;
+
   return (
-    <motion.div className="kanban-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+    <motion.div className="kanban-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+      {/* Pipeline Metrics Strip */}
       <div className="kanban-stats">
         {stats ? (
           <>
-            <StatCard label="Total Applications" value={stats.total} icon={Briefcase} color="primary" />
-            <StatCard label="Interviewing" value={stats.interview} icon={CheckSquare} color="warning" />
-            <StatCard label="Offers" value={stats.offer} icon={FileText} color="success" />
-            <StatCard label="Rejected" value={stats.rejected} icon={XOctagon} color="danger" />
+            <StatCard
+              label="Total Submissions"
+              value={totalJobs}
+              icon={Briefcase}
+              color="primary"
+              subLabel="Tracked pipeline"
+            />
+            <StatCard
+              label="Interviews Scheduled"
+              value={interviewCount}
+              icon={CheckSquare}
+              color="warning"
+              subValue={`${interviewRate}%`}
+              subLabel="pipeline conversion"
+            />
+            <StatCard
+              label="Offers Secured"
+              value={offerCount}
+              icon={FileText}
+              color="accent"
+              badge={offerCount > 0 ? `${offerRate}% rate` : undefined}
+              badgeVariant="success"
+            />
+            <StatCard
+              label="Archived / Closed"
+              value={rejectedCount}
+              icon={XOctagon}
+              color="danger"
+              subLabel="Unsuccessful"
+            />
           </>
         ) : (
           <>
-            <Skeleton height="100px" />
-            <Skeleton height="100px" />
-            <Skeleton height="100px" />
-            <Skeleton height="100px" />
+            <Skeleton height="80px" />
+            <Skeleton height="80px" />
+            <Skeleton height="80px" />
+            <Skeleton height="80px" />
           </>
         )}
       </div>

@@ -277,33 +277,47 @@ export default function MoneyPage() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="dashboard-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-        <StatCard
-          label="Total Net Balance"
-          value={formatCurrency(totalBalance)}
-          icon={Wallet}
-          color="primary"
-        />
-        <StatCard
-          label={`Income (${formatMonthLabel(selectedMonth)})`}
-          value={formatCurrency(summary.total_income)}
-          icon={TrendingUp}
-          color="success"
-        />
-        <StatCard
-          label={`Expenses (${formatMonthLabel(selectedMonth)})`}
-          value={formatCurrency(summary.total_expense)}
-          icon={TrendingDown}
-          color="danger"
-        />
-        <StatCard
-          label="Net Savings"
-          value={formatCurrency(summary.net_savings)}
-          icon={PiggyBank}
-          color="accent"
-        />
-      </div>
+      {/* Differentiated Financial Metrics */}
+      {(() => {
+        const savingsRate = summary.total_income > 0 
+          ? ((summary.net_savings / summary.total_income) * 100).toFixed(0) 
+          : 0;
+
+        return (
+          <div className="dashboard-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+            <StatCard
+              label="Total Net Liquidity"
+              value={formatCurrency(totalBalance)}
+              icon={Wallet}
+              color="primary"
+              subValue={`${accounts.length}`}
+              subLabel="active accounts"
+            />
+            <StatCard
+              label={`Inflow (${formatMonthLabel(selectedMonth)})`}
+              value={formatCurrency(summary.total_income)}
+              icon={TrendingUp}
+              color="accent"
+              subLabel="Monthly credits"
+            />
+            <StatCard
+              label={`Outflow (${formatMonthLabel(selectedMonth)})`}
+              value={formatCurrency(summary.total_expense)}
+              icon={TrendingDown}
+              color="danger"
+              subLabel="Monthly debits"
+            />
+            <StatCard
+              label="Net Period Savings"
+              value={formatCurrency(summary.net_savings)}
+              icon={PiggyBank}
+              color={summary.net_savings >= 0 ? 'accent' : 'danger'}
+              badge={summary.total_income > 0 ? `${savingsRate}% saved` : undefined}
+              badgeVariant={summary.net_savings >= 0 ? 'success' : 'high'}
+            />
+          </div>
+        );
+      })()}
 
       {/* Main Grid: Wallets + Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
